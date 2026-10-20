@@ -938,6 +938,30 @@ class TestLastSignIn:
             assert stored.last_sign_in_at.replace(tzinfo=timezone.utc) == newer
 
     @pytest.mark.anyio
+    async def test_password_login_retries_sqlite_write_conflict(self, setup_db, monkeypatch):
+        from sqlalchemy.exc import OperationalError
+
+        import portal.routers.auth as auth_router
+
+        user = await _create_test_user(email="retry-sign-in@example.com")
+        original_update_user = auth_router.update_user
+        attempts = 0
+
+        async def fail_once(*args, **kwargs):
+            nonlocal attempts
+            attempts += 1
+            if attempts == 1:
+                raise OperationalError("database is locked", {}, Exception())
+            return await original_update_user(*args, **kwargs)
+
+        monkeypatch.setattr(auth_router, "update_user", fail_once)
+        async with _client() as client:
+            response = await client.post("/login", data={"email": user.email, "password": "securepass123"})
+
+        assert response.status_code == 303
+        assert attempts == 2
+
+    @pytest.mark.anyio
     async def test_inactive_password_reset_does_not_sign_in(self, setup_db):
         from portal.database import create_auth_token, get_session, get_user_by_id
 
