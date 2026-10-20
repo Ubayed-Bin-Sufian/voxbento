@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import hashlib
 import os
+import secrets
+import time
+from datetime import datetime, timedelta, timezone
 
 os.environ["BOOTH_ACCESS_TOKEN"] = ""
 
@@ -895,6 +899,91 @@ class TestAccountPage:
 # ---------------------------------------------------------------------------
 # Admin user management
 # ---------------------------------------------------------------------------
+
+
+class TestLastSignIn:
+    @pytest.mark.anyio
+    async def test_password_login_records_timestamp_and_failure_does_not(self, setup_db):
+        from portal.database import get_session, get_user_by_id
+
+        user = await _create_test_user(email="last-sign-in@example.com")
+        async with _client() as c:
+            failed = await c.post("/login", data={"email": user.email, "password": "wrong-password"})
+            assert failed.status_code == 403
+            success = await c.post("/login", data={"email": user.email, "password": "securepass123"})
+            assert success.status_code == 303
+
+        async with get_session() as session:
+            stored = await get_user_by_id(session, user.id)
+            assert stored.last_sign_in_at is not None
+
+    @pytest.mark.anyio
+    async def test_sign_in_timestamp_never_moves_backwards(self, setup_db):
+        from portal.database import get_session, update_user
+
+        user = await _create_test_user(email="monotonic-sign-in@example.com")
+        newer = datetime.now(timezone.utc)
+        older = newer - timedelta(minutes=1)
+        async with get_session() as session:
+            await update_user(session, user.id, last_sign_in_at=newer)
+        async with get_session() as session:
+            await update_user(session, user.id, last_sign_in_at=older)
+        async with get_session() as session:
+            stored = await session.get(type(user), user.id)
+            assert stored.last_sign_in_at.replace(tzinfo=timezone.utc) == newer
+
+    @pytest.mark.anyio
+    async def test_inactive_password_reset_does_not_sign_in(self, setup_db):
+        from portal.database import create_auth_token, get_session, get_user_by_id
+
+        user = await _create_test_user(email="inactive-reset@example.com")
+        async with get_session() as session:
+            stored = await get_user_by_id(session, user.id)
+            stored.is_active = False
+            await create_auth_token(session, jti="inactive-reset-token", user_id=user.id, token_type="password_reset")
+
+        async with _client() as client:
+            response = await client.post(
+                "/auth/reset/inactive-reset-token", data={"password": "newpassword123"}, follow_redirects=False
+            )
+        assert response.status_code == 403
+        async with get_session() as session:
+            stored = await get_user_by_id(session, user.id)
+            assert stored.last_sign_in_at is None
+
+    @pytest.mark.anyio
+    async def test_magic_poll_keeps_poll_entry_when_timestamp_commit_fails(self, setup_db, monkeypatch):
+        import portal.routers.auth as auth_router
+        from portal.database import create_auth_token, get_session
+
+        user = await _create_test_user(email="magic-poll-retry@example.com")
+        token_jti = secrets.token_hex(32)
+        poll_id = secrets.token_hex(32)
+        nonce = secrets.token_hex(32)
+        async with get_session() as session:
+            auth_token = await create_auth_token(session, jti=token_jti, user_id=user.id, token_type="magic_link")
+            auth_token.used_at = datetime.now(timezone.utc)
+
+        auth_router._magic_polls[poll_id] = {
+            "token_jti": token_jti,
+            "nonce_hash": hashlib.sha256(nonce.encode()).hexdigest(),
+            "user_id": user.id,
+            "expires_at": auth_token.expires_at,
+            "consumed": False,
+            "created_at": time.time(),
+        }
+
+        async def fail_timestamp(*args, **kwargs):
+            raise RuntimeError("timestamp write failed")
+
+        monkeypatch.setattr(auth_router, "update_user", fail_timestamp)
+        with pytest.raises(RuntimeError, match="timestamp write failed"):
+            async with _client() as client:
+                await client.get(
+                    f"/api/auth/magic-poll?poll_id={poll_id}",
+                    cookies={"poll_verifier": f"{poll_id}:{nonce}"},
+                )
+        assert poll_id in auth_router._magic_polls
 
 
 class TestAdminUserManagement:

@@ -583,7 +583,14 @@ async def update_user(
         if is_active is not None:
             user.is_active = is_active
         if last_sign_in_at is not None:
-            user.last_sign_in_at = last_sign_in_at
+            await session.execute(
+                sa.update(User)
+                .where(User.id == user_id)
+                .where(or_(User.last_sign_in_at.is_(None), User.last_sign_in_at < last_sign_in_at))
+                .values(last_sign_in_at=last_sign_in_at)
+                .execution_options(synchronize_session=False)
+            )
+            await session.refresh(user)
         await session.flush()
     return user
 
