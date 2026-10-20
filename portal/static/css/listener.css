@@ -23,6 +23,10 @@
   display: none !important;
 }
 
+.listener-control[hidden] {
+  display: none !important;
+}
+
 .caption-history-block {
   display: flex;
 }
