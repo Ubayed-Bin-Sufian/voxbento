@@ -910,6 +910,11 @@ class TestLastSignIn:
         async with _client() as c:
             failed = await c.post("/login", data={"email": user.email, "password": "wrong-password"})
             assert failed.status_code == 403
+        async with get_session() as session:
+            stored = await get_user_by_id(session, user.id)
+            assert stored.last_sign_in_at is None
+
+        async with _client() as c:
             success = await c.post("/login", data={"email": user.email, "password": "securepass123"})
             assert success.status_code == 303
 
@@ -976,6 +981,7 @@ class TestLastSignIn:
         async def fail_timestamp(*args, **kwargs):
             raise RuntimeError("timestamp write failed")
 
+        original_update_user = auth_router.update_user
         monkeypatch.setattr(auth_router, "update_user", fail_timestamp)
         with pytest.raises(RuntimeError, match="timestamp write failed"):
             async with _client() as client:
@@ -984,6 +990,17 @@ class TestLastSignIn:
                     cookies={"poll_verifier": f"{poll_id}:{nonce}"},
                 )
         assert poll_id in auth_router._magic_polls
+        assert auth_router._magic_polls[poll_id]["processing"] is False
+
+        monkeypatch.setattr(auth_router, "update_user", original_update_user)
+        async with _client() as client:
+            response = await client.get(
+                f"/api/auth/magic-poll?poll_id={poll_id}",
+                cookies={"poll_verifier": f"{poll_id}:{nonce}"},
+            )
+        assert response.status_code == 200
+        assert response.json()["authenticated"] is True
+        assert poll_id not in auth_router._magic_polls
 
 
 class TestAdminUserManagement:
