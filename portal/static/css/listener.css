@@ -19,6 +19,14 @@
   display: block;
 }
 
+.listener-hidden {
+  display: none !important;
+}
+
+.caption-history-block {
+  display: flex;
+}
+
 .captions-content-area--stacked {
   flex-direction: column;
 }
