@@ -461,6 +461,7 @@ function renderItem(data) {
           existingTDiv.querySelector(".untrusted-text").textContent = data.text;
         } else {
           block.appendChild(tDiv);
+          applyCaptionMode();
         }
       } else {
         // Fallback if we missed the original caption
