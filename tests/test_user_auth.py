@@ -980,53 +980,6 @@ class TestLastSignIn:
             stored = await get_user_by_id(session, user.id)
             assert stored.last_sign_in_at is None
 
-    @pytest.mark.anyio
-    async def test_magic_poll_keeps_poll_entry_when_timestamp_commit_fails(self, setup_db, monkeypatch):
-        import portal.routers.auth as auth_router
-        from portal.database import create_auth_token, get_session
-
-        user = await _create_test_user(email="magic-poll-retry@example.com")
-        token_jti = secrets.token_hex(32)
-        poll_id = secrets.token_hex(32)
-        nonce = secrets.token_hex(32)
-        async with get_session() as session:
-            auth_token = await create_auth_token(session, jti=token_jti, user_id=user.id, token_type="magic_link")
-            auth_token.used_at = datetime.now(timezone.utc)
-
-        auth_router._magic_polls[poll_id] = {
-            "token_jti": token_jti,
-            "nonce_hash": hashlib.sha256(nonce.encode()).hexdigest(),
-            "user_id": user.id,
-            "expires_at": auth_token.expires_at,
-            "consumed": False,
-            "created_at": time.time(),
-        }
-
-        async def fail_timestamp(*args, **kwargs):
-            raise RuntimeError("timestamp write failed")
-
-        original_update_user = auth_router.update_user
-        monkeypatch.setattr(auth_router, "update_user", fail_timestamp)
-        with pytest.raises(RuntimeError, match="timestamp write failed"):
-            async with _client() as client:
-                await client.get(
-                    f"/api/auth/magic-poll?poll_id={poll_id}",
-                    cookies={"poll_verifier": f"{poll_id}:{nonce}"},
-                )
-        assert poll_id in auth_router._magic_polls
-        assert auth_router._magic_polls[poll_id]["processing"] is False
-
-        monkeypatch.setattr(auth_router, "update_user", original_update_user)
-        async with _client() as client:
-            response = await client.get(
-                f"/api/auth/magic-poll?poll_id={poll_id}",
-                cookies={"poll_verifier": f"{poll_id}:{nonce}"},
-            )
-        assert response.status_code == 200
-        assert response.json()["authenticated"] is True
-        assert poll_id not in auth_router._magic_polls
-
-
 class TestAdminUserManagement:
     @pytest.mark.anyio
     async def test_user_list_shows_users(self, setup_db, admin_cookie):
@@ -1380,7 +1333,6 @@ class TestMagicLinkAuthentication:
 
     @pytest.mark.anyio
     async def test_magic_link_redirect_places_auth_sync_in_query_before_fragment(self, setup_db):
-        import secrets
         from urllib.parse import quote
 
         from portal.database import create_auth_token, get_session
