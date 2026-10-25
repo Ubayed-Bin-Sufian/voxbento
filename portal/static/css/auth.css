@@ -327,10 +327,10 @@ body:has(.login-page) .portal-footer {
   margin: 80px auto;
   padding: 40px 20px;
   text-align: center;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  background: var(--vb-color-surface);
+  border: 1px solid var(--vb-color-border);
+  border-radius: var(--vb-radius-md);
+  box-shadow: var(--vb-shadow-md);
 }
 
 .magic-success-icon {
@@ -340,20 +340,20 @@ body:has(.login-page) .portal-footer {
   width: 64px;
   height: 64px;
   margin: 0 auto 20px;
-  color: white;
+  color: var(--vb-color-surface);
   font-size: 32px;
-  background: #22c55e;
+  background: var(--vb-color-success);
   border-radius: 50%;
 }
 
 .magic-success-title {
   margin-top: 0;
-  color: #0f172a;
+  color: var(--vb-color-text);
 }
 
 .magic-success-message {
   margin-bottom: 24px;
-  color: #64748b;
+  color: var(--vb-color-muted);
   font-size: 16px;
 }
 
@@ -364,13 +364,13 @@ body:has(.login-page) .portal-footer {
   gap: 10px;
   margin-bottom: 20px;
   padding: 14px 18px;
-  color: #1e40af;
+  color: var(--vb-color-primary-active);
   font-weight: 500;
   line-height: 1.6;
   text-align: left;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 8px;
+  background: var(--vb-color-primary-subtle);
+  border: 1px solid var(--vb-color-primary-border);
+  border-radius: var(--vb-radius-sm);
 }
 
 .magic-success-status-icon {
@@ -378,17 +378,17 @@ body:has(.login-page) .portal-footer {
 }
 
 .magic-success-status-title {
-  color: #1e3a8a;
+  color: var(--vb-color-primary-active);
   font-weight: 600;
 }
 
 .magic-success-status-message {
-  color: #3b82f6;
+  color: var(--vb-color-primary);
   font-size: 14px;
 }
 
 .magic-success-status-message a {
-  color: #1d4ed8;
+  color: var(--vb-color-primary-hover);
   font-weight: 600;
   text-decoration: underline;
   cursor: pointer;
