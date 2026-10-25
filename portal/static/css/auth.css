@@ -321,6 +321,78 @@ body:has(.login-page) .portal-footer {
 .login-footer--spaced { margin-top: 24px; }
 .login-link--spaced { margin-top: 12px; display: inline-block; }
 .login-link--forgot { margin-top: 8px; display: inline-block; }
+
+.magic-success-card {
+  max-width: 480px;
+  margin: 80px auto;
+  padding: 40px 20px;
+  text-align: center;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+}
+
+.magic-success-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px;
+  color: white;
+  font-size: 32px;
+  background: #22c55e;
+  border-radius: 50%;
+}
+
+.magic-success-title {
+  margin-top: 0;
+  color: #0f172a;
+}
+
+.magic-success-message {
+  margin-bottom: 24px;
+  color: #64748b;
+  font-size: 16px;
+}
+
+.magic-success-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 14px 18px;
+  color: #1e40af;
+  font-weight: 500;
+  line-height: 1.6;
+  text-align: left;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+}
+
+.magic-success-status-icon {
+  font-size: 20px;
+}
+
+.magic-success-status-title {
+  color: #1e3a8a;
+  font-weight: 600;
+}
+
+.magic-success-status-message {
+  color: #3b82f6;
+  font-size: 14px;
+}
+
+.magic-success-status-message a {
+  color: #1d4ed8;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
 .btn-submit--spaced { margin-top: 12px; }
 .account-alert-banner { margin-bottom: 24px; padding: 16px 20px; border: 2px solid #ef4444; border-radius: 8px; background: #fef2f2; color: #b91c1c; font-weight: 600; }
 
