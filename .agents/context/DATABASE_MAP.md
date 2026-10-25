@@ -252,7 +252,8 @@ Tracks which languages the translation worker should generate for a given room o
 | 032 | `032_remove_support_role.py` | Removes the obsolete support role |
 | 033 | `033_add_index_booths_event_id.py` | Index on `booths.event_id` |
 | 034 | `034_email_notifications.py` | Transactional email templates, settings, revisions, and delivery outbox |
-| 035 | `035_add_last_sign_in_at_to_users.py` | Nullable `users.last_sign_in_at` |
+| 035 | `035_per_language_voice.py` | `room_translation_languages.tts_enabled` |
+| 036 | `036_add_last_sign_in_at_to_users.py` | Nullable `users.last_sign_in_at` |
 
 Run migrations: `uv run alembic upgrade head`
 
