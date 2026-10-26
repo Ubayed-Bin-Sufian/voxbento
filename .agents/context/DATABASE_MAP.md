@@ -253,7 +253,10 @@ Tracks which languages the translation worker should generate for a given room o
 | 033 | `033_add_index_booths_event_id.py` | Index on `booths.event_id` |
 | 034 | `034_email_notifications.py` | Transactional email templates, settings, revisions, and delivery outbox |
 | 035 | `035_per_language_voice.py` | `room_translation_languages.tts_enabled` |
-| 036 | `036_add_last_sign_in_at_to_users.py` | Nullable `users.last_sign_in_at` |
+| 036 | `036_add_sessions_valid_after_to_users.py` | `users.sessions_valid_after` |
+| 037 | `037_add_revoked_at_to_invite_tokens.py` | `invite_tokens.revoked_at` |
+| 038 | `038_add_public_id_to_invite_tokens.py` | `invite_tokens.public_id` |
+| 039 | `039_add_last_sign_in_at_to_users.py` | Nullable `users.last_sign_in_at` |
 
 Run migrations: `uv run alembic upgrade head`
 
