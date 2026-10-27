@@ -608,8 +608,10 @@ async def update_user(
                 .values(last_sign_in_at=last_sign_in_at)
                 .execution_options(synchronize_session=False)
             )
+            await session.flush()
             await session.refresh(user)
-        await session.flush()
+        else:
+            await session.flush()
     return user
 
 

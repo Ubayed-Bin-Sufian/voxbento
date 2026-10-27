@@ -938,6 +938,27 @@ class TestLastSignIn:
             assert stored.last_sign_in_at.replace(tzinfo=timezone.utc) == newer
 
     @pytest.mark.anyio
+    async def test_update_user_preserves_other_changes_with_timestamp(self, setup_db):
+        from portal.database import get_session, update_user
+
+        user = await _create_test_user(email="combined-update@example.com", password="oldpassword123")
+        timestamp = datetime.now(timezone.utc)
+        async with get_session() as session:
+            await update_user(
+                session,
+                user.id,
+                password_hash=hash_password("newpassword123"),
+                email_verified=False,
+                last_sign_in_at=timestamp,
+            )
+
+        async with get_session() as session:
+            stored = await session.get(type(user), user.id)
+            assert stored.password_hash != user.password_hash
+            assert stored.email_verified is False
+            assert stored.last_sign_in_at.replace(tzinfo=timezone.utc) == timestamp
+
+    @pytest.mark.anyio
     async def test_password_login_retries_sqlite_write_conflict(self, setup_db, monkeypatch):
         from sqlalchemy.exc import OperationalError
 
